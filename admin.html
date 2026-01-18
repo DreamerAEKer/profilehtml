@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - THP Rate Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-btn {
+            background: #eee;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .rate-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .rate-item input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .rate-item .name {
+            flex: 2;
+        }
+
+        .rate-item .price {
+            flex: 1;
+        }
+
+        .rate-item .weight {
+            flex: 1;
+        }
+
+        .rate-item .actions {
+            color: #d9534f;
+            cursor: pointer;
+        }
+
+        .add-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .save-btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" style="padding-bottom: 80px;">
+        <div class="admin-header">
+            <h2><i class="fa-solid fa-user-shield"></i> Admin Dashboard</h2>
+            <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to App</a>
+        </div>
+
+        <div class="alert"
+            style="background: #e8f4fd; color: #0d47a1; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+            <i class="fa-solid fa-circle-info"></i> Edits here will modify the "Fallback/Estimated" rates used when the
+            live server is slow.
+        </div>
+
+        <h3 class="section-title">Domestic Rates (Within Thailand)</h3>
+        <div id="domestic-list">
+            <!-- Items injected by JS -->
+        </div>
+        <button class="add-btn" onclick="addRate('domestic')">+ Add Service</button>
+
+        <h3 class="section-title">International Rates (Standard)</h3>
+        <div id="international-list">
+            <!-- Items injected by JS -->
+        </div>
+        <button class="add-btn" onclick="addRate('international')">+ Add Service</button>
+    </div>
+
+    <div class="save-bar">
+        <button class="reset-btn" onclick="resetToDefaults()">Reset Defaults</button>
+        <button class="save-btn" onclick="saveChanges()">Save Changes</button>
+    </div>
+
+    <script>
+        // Default Data
+        const defaultRates = {
+            domestic: [
+                { name_service: "EMS", total_price: 67.00, max_weight_range: "1000g" },
+                { name_service: "eCo-Post", total_price: 40.00, max_weight_range: "1000g" },
+                { name_service: "Registered (Box)", total_price: 60.00, max_weight_range: "1000g" },
+                { name_service: "Registered (Envelope)", total_price: 53.00, max_weight_range: "1000g" },
+                { name_service: "Parcel Post", total_price: 20.00, max_weight_range: "1000g" }
+            ],
+            international: [
+                { name_service: "Courier Post", total_price: 1450.00, max_weight_range: "1000g" },
+                { name_service: "EMS World", total_price: 1100.00, max_weight_range: "1000g" },
+                { name_service: "ePacket", total_price: 850.00, max_weight_range: "1000g" },
+                { name_service: "Air Mail", total_price: 650.00, max_weight_range: "1000g" }
+            ]
+        };
+
+        let currentRates = { domestic: [], international: [] };
+
+        function init() {
+            // Load from LocalStorage or Default
+            const stored = localStorage.getItem('thp_rates');
+            if (stored) {
+                currentRates = JSON.parse(stored);
+            } else {
+                currentRates = JSON.parse(JSON.stringify(defaultRates));
+            }
+            render();
+        }
+
+        function render() {
+            renderList('domestic', currentRates.domestic);
+            renderList('international', currentRates.international);
+        }
+
+        function renderList(type, list) {
+            const container = document.getElementById(`${type}-list`);
+            container.innerHTML = '';
+            list.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'rate-item';
+                div.innerHTML = `
+                    <input type="text" class="name" value="${item.name_service}" placeholder="Service Name" onchange="updateRate('${type}', ${index}, 'name_service', this.value)">
+                    <input type="number" class="price" value="${item.total_price}" placeholder="Price" onchange="updateRate('${type}', ${index}, 'total_price', this.value)">
+                    <input type="text" class="weight" value="${item.max_weight_range}" placeholder="Weight" onchange="updateRate('${type}', ${index}, 'max_weight_range', this.value)">
+                    <i class="fa-solid fa-trash-can actions" onclick="removeRate('${type}', ${index})"></i>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateRate(type, index, field, value) {
+            currentRates[type][index][field] = value;
+        }
+
+        function addRate(type) {
+            currentRates[type].push({ name_service: "New Service", total_price: 0, max_weight_range: "1000g" });
+            render();
+        }
+
+        function removeRate(type, index) {
+            if (confirm('Delete this rate?')) {
+                currentRates[type].splice(index, 1);
+                render();
+            }
+        }
+
+        function saveChanges() {
+            localStorage.setItem('thp_rates', JSON.stringify(currentRates));
+            alert('Changes Saved! Return to the app to see them.');
+        }
+
+        function resetToDefaults() {
+            // New Requirement: Ask for password before resetting
+            const password = prompt("Please confirm Admin Password to reset:");
+            if (password === "Khunnawut.Yu37977310501") {
+                if (confirm('Reset all rates to default? This cannot be undone.')) {
+                    currentRates = JSON.parse(JSON.stringify(defaultRates));
+                    localStorage.setItem('thp_rates', JSON.stringify(currentRates));
+                    render();
+                }
+            } else if (password !== null) {
+                alert("Incorrect Password!");
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
