@@ -311,7 +311,7 @@
 
         function resetToDefaults() {
             // Check Dynamic Password
-            const savedPass = localStorage.getItem('thp_admin_pass') || "Khunnawut.Yu37977310501";
+            const savedPass = localStorage.getItem('thp_admin_pass') || "37977310501";
             const password = prompt("Please confirm Admin Password to reset:");
 
             if (password === savedPass) {
@@ -362,7 +362,7 @@
             const newPass = document.getElementById('newInfoPassword').value;
             const confirmPass = document.getElementById('confirmInfoPassword').value;
 
-            const savedPass = localStorage.getItem('thp_admin_pass') || "Khunnawut.Yu37977310501";
+            const savedPass = localStorage.getItem('thp_admin_pass') || "37977310501";
 
             if (currentPass !== savedPass) {
                 alert("Current Password Incorrect (รหัสผ่านเดิมไม่ถูกต้อง)");

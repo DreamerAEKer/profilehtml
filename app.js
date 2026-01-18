@@ -116,6 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set active tab UI
     const savedTab = localStorage.getItem('lastActiveTab') || 'domestic';
     if (typeof switchTab === 'function') switchTab(savedTab);
+
+    // FIX: Migrate old default password to new one if present
+    const currentPass = localStorage.getItem('thp_admin_pass');
+    if (currentPass === "Khunnawut.Yu37977310501") {
+        localStorage.setItem('thp_admin_pass', "37977310501");
+        console.log("Migrated Admin Password to new default.");
+    }
 });
 
 
@@ -1178,7 +1185,7 @@ function highlightLangSetting(lang) {
 
 // function checkAdminAuth() {
 //     const password = prompt(currentLang === 'en' ? "Enter Admin Password:" : "กรุณาใส่รหัสผ่าน Admin:");
-//     if (password === "Khunnawut.Yu37977310501") {
+//     if (password === "37977310501") {
 //         window.location.href = "admin.html";
 //     } else if (password !== null) {
 //         alert(currentLang === 'en' ? "Incorrect Password!" : "รหัสผ่านไม่ถูกต้อง!");
@@ -1223,7 +1230,7 @@ function submitAdminAuth(e) {
     const password = document.getElementById('adminPasswordInput').value;
 
     // Dynamic Password Check
-    const savedPass = localStorage.getItem('thp_admin_pass') || "Khunnawut.Yu37977310501";
+    const savedPass = localStorage.getItem('thp_admin_pass') || "37977310501";
 
     if (password === savedPass) {
         window.location.href = "admin.html";
